@@ -10,3 +10,6 @@
 3. survivor bias
 > All the returning planes that sustained damage did, by definition, survive without extra armor. The most useful pattern of damage would be on the planes that did not return. However, they are out of sight, out of mind and that data may never be collectible anyway. 
 @[coursera](https://www.coursera.org/learn/dataviz-dashboards/home)
+
+- Some bolgs
+  - https://oku.edu.mie-u.ac.jp/~okumura/stat/
