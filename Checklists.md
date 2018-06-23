@@ -1,4 +1,4 @@
 # Weeklist
 ## Week of Jun.19
-- [ ] All about that correlation
+- [ ] All about that Correlation
 - [ ] Netflix analysis
