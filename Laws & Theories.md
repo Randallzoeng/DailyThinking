@@ -11,7 +11,7 @@
 > All the returning planes that sustained damage did, by definition, survive without extra armor. The most useful pattern of damage would be on the planes that did not return. However, they are out of sight, out of mind and that data may never be collectible anyway. 
 
 4. Regression to the mean effect 
-> anytime you sample based on extreme values of one attribute, any other attribute that is not perfectly related will tend to be closer to the mean value. (4-8 are cited from [People Analytics](https://www.coursera.org/learn/wharton-people-analytics)
+> anytime you sample based on extreme values of one attribute, any other attribute that is not perfectly related will tend to be closer to the mean value. (4-8 are cited from [@People Analytics](https://www.coursera.org/learn/wharton-people-analytics))
 
 5. Outcome bias
 > And we draw too strong an inference based on this. We tend to judge decisions andpeople by outcomes and not by process. 
