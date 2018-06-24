@@ -9,11 +9,9 @@
 
 3. survivor bias
 > All the returning planes that sustained damage did, by definition, survive without extra armor. The most useful pattern of damage would be on the planes that did not return. However, they are out of sight, out of mind and that data may never be collectible anyway. 
-@[coursera](https://www.coursera.org/learn/dataviz-dashboards/home)
 
-4. Regression to the mean effect
-> anytime you sample based on extreme values of one attribute, any other attribute that is not perfectly related will tend to be closer to the mean value.
-@[coursera](https://www.coursera.org/learn/wharton-people-analytics/lecture/GMEr7/finding-persistence-regression-to-the-mean)
+4. Regression to the mean effect 
+> anytime you sample based on extreme values of one attribute, any other attribute that is not perfectly related will tend to be closer to the mean value. (4-8 are cited from [People Analytics](https://www.coursera.org/learn/wharton-people-analytics)
 
 5. Outcome bias
 > And we draw too strong an inference based on this. We tend to judge decisions andpeople by outcomes and not by process. 
@@ -26,6 +24,8 @@
 
 8. The Wisdom of Crowds
 > 全面信息和多种观点的对抗和互补是群体决策的优势
+> the average of a large number of forecasts reliably outperforms the average individual forecast. but the value of the crowd critically depends on the independence of their opinions. 
+
 
 - Some bolgs
   - https://oku.edu.mie-u.ac.jp/~okumura/stat/
