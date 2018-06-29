@@ -11,6 +11,10 @@ test<- read.table("tap_fun_test.csv",sep=",",
                    header=TRUE, fileEncoding="UTF-8-BOM",
                    stringsAsFactors=FALSE,fill=TRUE)
 
+for(i in 35:99){
+  train[,i] <- factor(train[,i],order=TRUE)
+}
+
 #2. prediction using simple liner regression (frame problems)
 train_simp <- train[,3:110]
 fit <- lm(prediction_pay_price~.,data=train_simp)
@@ -121,6 +125,13 @@ df$train_acc <- train$training_acceleration_add_value - train$training_accelerat
 df$treat_acc <- train$treatment_acceleraion_add_value - train$treatment_acceleration_reduce_value
 
 #level
+
+
+
+# factorfun <- function(x){
+#   factor(x,ordered = TRUE)
+# }
+
 df$bdlevel <- apply(train[,35:50],1,sum)
 df$sclevel <- apply(train[,51:99],1,sum)
 #other info
@@ -168,6 +179,8 @@ write.csv(x=test[,c(1,109)],file = "upload.csv")
 
 #library(Matrix)
 #Matrix(as.matrix(x), sparse = TRUE)
+
+#install.packages("Boruta")
 
 
 
