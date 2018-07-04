@@ -6,8 +6,10 @@ library(data.table)
 setwd("D:/Projects/BrutalAge/data/")
 train <- read_csv("tap_fun_train.csv")
 #creat some other features for later use
-train$lifetime <- as.numeric(as.Date(max(train$register_time))-as.Date(train$register_time))
-train$cls <- as.factor(ifelse(train$prediction_pay_price==0,"pre_free","pre_paid"))
+test <- read_csv("tap_fun_test.csv")
+
+)
+
 train$cat <- as.factor(ifelse(train$pay_price==0,'free','paid'))
 
 # 2. split train set using stratified sampling 
@@ -69,10 +71,11 @@ importance[1:10,]
 # auc Area under curve
 # aucpr Area under PR curve
 # merror Exact matching error, used to evaluate multi-class classification
+df <- test[,3:109]
+df <- as.matrix(df)
+df <- as(df,'sparseMatrix')
 
-
-
-pred <- predict(bst, sparse_matrix_test)
+pred <- predict(bst, df)
 prediction <- as.numeric(pred > 0.5)
 
 table(output_vector_test,prediction)
@@ -135,8 +138,8 @@ table(train$cls)
 prop.table(table(train$cls))
 
 ###combination
-rm(df)
-df <- train[,c(109:110)]
+
+df <- train
 
 df$wood <- train$wood_add_value + train$wood_reduce_value
 df$stone <- train$stone_add_value + train$stone_reduce_value
@@ -164,22 +167,90 @@ df$avg_online_minutes <- train$avg_online_minutes
 df$pay_price <- train$pay_price
 df$pay_count <- train$pay_count
 
-# library(ROSE)
-# train_set <- train[,c(3:108,110)]
-# train_bal <- ROSE(cls ~ . ,data = train_set,seed = 42)$data
 
-TRN <- as.data.frame(cbind(scale(df[,c(3:22)]),df$prediction_pay_price))
-colnames(TRN)[21] <- c("prediction_pay_price")
-fit <- lm(prediction_pay_price~.,data=TRN)
-summary(fit)
-library(Metrics)
-rmse(actual = TRN$prediction_pay_price,predicted = fit$fitted.values)
+#@20180704
+#Handling Imbalance data using SMOTE(ROSE)
+#http://www.ituring.com.cn/article/215742
 
-library(caret)
-train_control <- trainControl(method="cv", number=10)
-model <- train(prediction_pay_price~., data=TRN, trControl=train_control, method="lm")
+##cannot allocate vector of size 1.8 Gb
+#https://stackoverflow.com/questions/5171593/r-memory-management-cannot-allocate-vector-of-size-n-mb
 
 
 
+# library(DMwR)
+# set.seed(9560)
+# df_scale <- as.data.frame(df_scale)
+# smote_train <- SMOTE(cls ~ ., data  = df_scale)                         
+# table(smote_train$Class)
+
+
+# Feature         Gain        Cover Frequency
+# 1:                         pay_price 8.954971e-01 0.3522030252     0.125
+# 2:                avg_online_minutes 7.646727e-02 0.1650050405     0.075
+# 3:                   ivory_add_value 7.850232e-03 0.1362506871     0.075
+# 4:                    wood_add_value 4.502457e-03 0.0282040830     0.025
+# 5:           sr_training_speed_level 4.351962e-03 0.0903250795     0.025
+# 6:    general_acceleration_add_value 1.415684e-03 0.0201083800     0.025
+# 7:                stone_reduce_value 1.149080e-03 0.0073406103     0.025
+# 8:                bd_warehouse_level 1.043384e-03 0.0025438602     0.025
+# 9:                   magic_add_value 8.518638e-04 0.0462656239     0.100
+# 10:                  pve_battle_count 8.457561e-04 0.0234323401     0.050
+# 11:                 wood_reduce_value 8.451635e-04 0.0028940124     0.025
+# 12:                          lifetime 7.949440e-04 0.0186964539     0.075
+# 13:   reaserch_acceleration_add_value 7.450027e-04 0.0160820057     0.050
+# 14:   building_acceleration_add_value 7.218366e-04 0.0014676757     0.025
+# 15:                magic_reduce_value 5.606009e-04 0.0114756825     0.025
+# 16:                infantry_add_value 4.231479e-04 0.0095826543     0.025
+# 17:           bd_healing_spring_level 3.388621e-04 0.0018930288     0.025
+# 18: general_acceleration_reduce_value 3.171399e-04 0.0175391828     0.025
+# 19:              cavalry_reduce_value 3.046991e-04 0.0166787733     0.025
+# 20:                   pve_lanch_count 2.725660e-04 0.0015679073     0.025
+# 21:               bd_hero_gacha_level 2.060896e-04 0.0138764894     0.025
+# 22:                   stone_add_value 1.461971e-04 0.0007833621     0.025
+# 23:       wound_infantry_reduce_value 1.445956e-04 0.0135862521     0.025
+# 24:           sr_outpost_tier_2_level 1.191887e-04 0.0013381087     0.025
+# 25:                    meat_add_value 8.519216e-05 0.0008596813     0.025
+# Feature         Gain        Cover Frequency
+
+# 
+# 1:                         pay_price 8.954971e-01 0.3522030252     0.125
+# 2:                avg_online_minutes 7.646727e-02 0.1650050405     0.075
+# 3:                   ivory_add_value 7.850232e-03 0.1362506871     0.075
+# 4:                    wood_add_value 4.502457e-03 0.0282040830     0.025
+# 5:           sr_training_speed_level 4.351962e-03 0.0903250795     0.025
+# 6:    general_acceleration_add_value 1.415684e-03 0.0201083800     0.025
+# 7:                stone_reduce_value 1.149080e-03 0.0073406103     0.025
+# 8:                bd_warehouse_level 1.043384e-03 0.0025438602     0.025
+# 9:                   magic_add_value 8.518638e-04 0.0462656239     0.100
+# 10:                  pve_battle_count 8.457561e-04 0.0234323401     0.050
+# 11:                 wood_reduce_value 8.451635e-04 0.0028940124     0.025
+# 12:                          lifetime 7.949440e-04 0.0186964539     0.075
+# 13:   reaserch_acceleration_add_value 7.450027e-04 0.0160820057     0.050
+# 14:   building_acceleration_add_value 7.218366e-04 0.0014676757     0.025
+# 15:                magic_reduce_value 5.606009e-04 0.0114756825     0.025
+# 16:                infantry_add_value 4.231479e-04 0.0095826543     0.025
+# 17:           bd_healing_spring_level 3.388621e-04 0.0018930288     0.025
+# 18: general_acceleration_reduce_value 3.171399e-04 0.0175391828     0.025
+# 19:              cavalry_reduce_value 3.046991e-04 0.0166787733     0.025
+# 20:                   pve_lanch_count 2.725660e-04 0.0015679073     0.025
+# 21:               bd_hero_gacha_level 2.060896e-04 0.0138764894     0.025
+# 22:                   stone_add_value 1.461971e-04 0.0007833621     0.025
+# 23:       wound_infantry_reduce_value 1.445956e-04 0.0135862521     0.025
+# 24:           sr_outpost_tier_2_level 1.191887e-04 0.0013381087     0.025
+# 25:                    meat_add_value 8.519216e-05 0.0008596813     0.025
+
+#@night
+train$lifetime <- as.numeric(as.Date(max(train$register_time))-as.Date(train$register_time))
+train$cls <- as.factor(ifelse(train$prediction_pay_price==0,"pre_free","pre_paid"))
+
+train <- train[,-109]
+
+library(ROSE)
+#train_bal <- ROSE(cls ~ . ,data = train,seed = 42)$data
+train_bal <- ovun.sample(cls ~ ., data = train, method = "both", p=0.5, N=2288007, seed = 1)$data
+
+library(Boruta)
+set.seed(123)
+btr <- Boruta(cls~.,data = train_bal)
 
 
