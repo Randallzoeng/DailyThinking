@@ -223,20 +223,20 @@ train$lifetime <- as.numeric(as.Date(max(train$register_time))-as.Date(train$reg
 train$cls <- as.factor(ifelse(train$prediction_pay_price==0,"pre_free","pre_paid"))
 train[,35:99] <- data.frame(apply(train[35:99],2,as.factor))
 df <- train[,-c(1,2,109)]
-df <- df[,c(105,104,5,1,50,23,4,41,9,101,108)]
+
 
 
 library(ROSE)
 #train_bal <- ROSE(cls ~ . ,data = train,seed = 42)$data
 df_bal <- ovun.sample(cls ~ ., data = df, method = "both", p=0.5, N=2288007, seed = 1)$data
-table(df_bal$cls)
+table(df_bal$sr_healing_speed_level)
 
 #featuring selection
 library(xgboost)
-sparse_matrix_sel <- sparse.model.matrix(cls ~ ., data = df_bal)[,-1]
-output_vector_sel = df_bal[,"cls"] == "pre_paid"
-dtrain_sel <- xgb.DMatrix(data = sparse_matrix, label = output_vector)
-bst_lgt_sel <- xgboost(data = dtrain, max.depth = 5, eta = 0.1, nthread = 2, max_delta_step=5,
+sparse_matrix <- sparse.model.matrix(cls ~ ., data = df_bal)[,-1]
+output_vector = df_bal[,"cls"] == "pre_paid"
+dtrain <- xgb.DMatrix(data = sparse_matrix, label = output_vector)
+bst_lgt <- xgboost(data = dtrain, max.depth = 5, eta = 0.1, nthread = 2, max_delta_step=5,
                 nround = 5, objective = "binary:logistic", verbose = 2,eval_metric="auc")
 
 importance <- xgb.importance(feature_names = colnames(sparse_matrix), model = bst_lgt)
@@ -265,7 +265,7 @@ library(caret)
 # dtrain <- xgb.DMatrix(data = sparse_matrix, label = output_vector)
 nround <- 5
 param <- list(max_depth=5, eta=0.1, silent=1, nthread=2, objective='binary:logistic')
-xgb.cv(param, dtrain_sel, nround, nfold=3, metrics={'auc'})
+xgb.cv(param, dtrain, nround, nfold=3, metrics={'auc'})
 #cross validation looks good
 
 #next step we might want build a regression to predict those paid customer
@@ -301,7 +301,8 @@ corrplot(correlations,method="circle",type="lower",sig.level = 0.01,insig = "bla
 #linear reg
 library(caret)
 
-fit_linear <- train(prediction_pay_price ~ ., data = df_com, method = "lm", 
+fit_linear <- train(prediction_pay_price ~ ., data = train[train$prediction_pay_price!=0,], 
+                    method = "lm", 
                     preProc = c("center", "scale"))
 
 
@@ -326,8 +327,14 @@ dtrain_com <- xgb.DMatrix(data = sparse_matrix_com, label = output_vector)
 
 #ctrl <- trainControl(method = "repeatedcv", number = 3, repeats = 2, search = "random")
 #model <- train(prediction_pay_price~., data = df_sel,preProc = c("center", "scale"), method = "xgbTree",  trControl = ctrl)
+train[,35:99] <- data.frame(apply(train[35:99],2,as.factor))
+imp_feat <- c("pay_price","avg_online_minutes","ivory_add_value","stone_reduce_value","general_acceleration_add_value",
+"wood_add_value","magic_add_value","meat_reduce_value","stone_add_value","building_acceleration_add_value",
+"pve_battle_count","meat_add_value","reaserch_acceleration_add_value","pve_win_count","training_acceleration_add_value",
+"infantry_add_value","wood_reduce_value","training_acceleration_reduce_value","lifetime","wound_infantry_reduce_value",
+"treatment_acceleraion_add_value","bd_barrack_level","shaman_reduce_value")
+df <- train[train$prediction_pay_price!=0,c(imp_feat,"prediction_pay_price")]
 
-fit_xgbLinear <- train(prediction_pay_price~., data = df_sel, method = "xgbLinear", preProc = c("center", "scale"))
 
 
 
