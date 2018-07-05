@@ -8,8 +8,6 @@ train <- read_csv("tap_fun_train.csv")
 #creat some other features for later use
 test <- read_csv("tap_fun_test.csv")
 
-)
-
 train$cat <- as.factor(ifelse(train$pay_price==0,'free','paid'))
 
 # 2. split train set using stratified sampling 
@@ -138,7 +136,7 @@ table(train$cls)
 prop.table(table(train$cls))
 
 ###combination
-
+train <- train[train$prediction_pay_price!=0,]
 df <- train
 
 df$wood <- train$wood_add_value + train$wood_reduce_value
@@ -212,45 +210,124 @@ df$pay_count <- train$pay_count
 # 25:                    meat_add_value 8.519216e-05 0.0008596813     0.025
 # Feature         Gain        Cover Frequency
 
-# 
-# 1:                         pay_price 8.954971e-01 0.3522030252     0.125
-# 2:                avg_online_minutes 7.646727e-02 0.1650050405     0.075
-# 3:                   ivory_add_value 7.850232e-03 0.1362506871     0.075
-# 4:                    wood_add_value 4.502457e-03 0.0282040830     0.025
-# 5:           sr_training_speed_level 4.351962e-03 0.0903250795     0.025
-# 6:    general_acceleration_add_value 1.415684e-03 0.0201083800     0.025
-# 7:                stone_reduce_value 1.149080e-03 0.0073406103     0.025
-# 8:                bd_warehouse_level 1.043384e-03 0.0025438602     0.025
-# 9:                   magic_add_value 8.518638e-04 0.0462656239     0.100
-# 10:                  pve_battle_count 8.457561e-04 0.0234323401     0.050
-# 11:                 wood_reduce_value 8.451635e-04 0.0028940124     0.025
-# 12:                          lifetime 7.949440e-04 0.0186964539     0.075
-# 13:   reaserch_acceleration_add_value 7.450027e-04 0.0160820057     0.050
-# 14:   building_acceleration_add_value 7.218366e-04 0.0014676757     0.025
-# 15:                magic_reduce_value 5.606009e-04 0.0114756825     0.025
-# 16:                infantry_add_value 4.231479e-04 0.0095826543     0.025
-# 17:           bd_healing_spring_level 3.388621e-04 0.0018930288     0.025
-# 18: general_acceleration_reduce_value 3.171399e-04 0.0175391828     0.025
-# 19:              cavalry_reduce_value 3.046991e-04 0.0166787733     0.025
-# 20:                   pve_lanch_count 2.725660e-04 0.0015679073     0.025
-# 21:               bd_hero_gacha_level 2.060896e-04 0.0138764894     0.025
-# 22:                   stone_add_value 1.461971e-04 0.0007833621     0.025
-# 23:       wound_infantry_reduce_value 1.445956e-04 0.0135862521     0.025
-# 24:           sr_outpost_tier_2_level 1.191887e-04 0.0013381087     0.025
-# 25:                    meat_add_value 8.519216e-05 0.0008596813     0.025
 
-#@night
+
+#@20180705
+library(tidyverse)
+library(Matrix)
+library(data.table)
+setwd("D:/Projects/BrutalAge/data/")
+train <- read_csv("tap_fun_train.csv")
+
 train$lifetime <- as.numeric(as.Date(max(train$register_time))-as.Date(train$register_time))
 train$cls <- as.factor(ifelse(train$prediction_pay_price==0,"pre_free","pre_paid"))
+train[,35:99] <- data.frame(apply(train[35:99],2,as.factor))
+df <- train[,-c(1,2,109)]
+df <- df[,c(105,104,5,1,50,23,4,41,9,101,108)]
 
-train <- train[,-109]
 
 library(ROSE)
 #train_bal <- ROSE(cls ~ . ,data = train,seed = 42)$data
-train_bal <- ovun.sample(cls ~ ., data = train, method = "both", p=0.5, N=2288007, seed = 1)$data
+df_bal <- ovun.sample(cls ~ ., data = df, method = "both", p=0.5, N=2288007, seed = 1)$data
+table(df_bal$cls)
 
-library(Boruta)
-set.seed(123)
-btr <- Boruta(cls~.,data = train_bal)
+#featuring selection
+library(xgboost)
+sparse_matrix_sel <- sparse.model.matrix(cls ~ ., data = df_bal)[,-1]
+output_vector_sel = df_bal[,"cls"] == "pre_paid"
+dtrain_sel <- xgb.DMatrix(data = sparse_matrix, label = output_vector)
+bst_lgt_sel <- xgboost(data = dtrain, max.depth = 5, eta = 0.1, nthread = 2, max_delta_step=5,
+                nround = 5, objective = "binary:logistic", verbose = 2,eval_metric="auc")
+
+importance <- xgb.importance(feature_names = colnames(sparse_matrix), model = bst_lgt)
+feat_sel <- importance$Feature
+
+df_bal <- df[,c(feat_sel,"cls")]
+
+#grid search using caret but very time-consuming
+library(caret)
+# xgb_ctrl <- trainControl(method="cv",number = 5,allowParallel = TRUE,
+# verboseIter = FALSE,returnData = FALSE)
+#
+# xgb_grid <- expand.grid(nrounds = c(100,200,500), max_depth = seq(1,10),
+# colsample_bytree = seq(0.5, 0.9, length.out = 5), eta = c(0.01,0.3,1), gamma=
+# c(0.0,0.2,1), min_child_weight = c(1:5), subsample = 1)
+#
+# X <- xgb.DMatrix(as.matrix(df_bal %>% select(-cls))) Y <- df_bal$cls
+#
+# set.seed(42) fit_bst <- train(X,Y,trControl = xgb_ctrl, tuneGrid = xgb_grid,
+# method = "xgbTree",metric = "auc")
+
+
+## cross validation 
+# sparse_matrix <- sparse.model.matrix(cls ~ ., data = df_bal)[,-1]
+# output_vector = df_bal[,"cls"] == "pre_paid"
+# dtrain <- xgb.DMatrix(data = sparse_matrix, label = output_vector)
+nround <- 5
+param <- list(max_depth=5, eta=0.1, silent=1, nthread=2, objective='binary:logistic')
+xgb.cv(param, dtrain_sel, nround, nfold=3, metrics={'auc'})
+#cross validation looks good
+
+#next step we might want build a regression to predict those paid customer
+feat_sel <- c("pay_price","avg_online_minutes","ivory_add_value","sr_training_speed_level","stone_reduce_value","wood_reduce_value","wood_add_value",
+         "general_acceleration_add_value","stone_add_value","magic_add_value","bd_healing_spring_level","bd_warehouse_level","meat_reduce_value",
+         "bd_guest_cavern_level","reaserch_acceleration_add_value","training_acceleration_add_value","bd_market_level","wound_shaman_add_value",
+         "building_acceleration_add_value","sr_outpost_durability_level","training_acceleration_reduce_value","bd_hero_strengthen_level",
+         "treatment_acceleraion_add_value","pvp_battle_count","prediction_pay_price")
+
+df_sel <- df[,feat_sel]
+correlations = cor(df)
+library(corrplot)
+corrplot(correlations, method="color")
+cor(df$wood_reduce_value,df$prediction_pay_price)
+#0.6264764
+
+cor(df$wood_reduce_value + df$wood_add_value,df$prediction_pay_price)
+#0.642695
+#shows more cor than single variable, so I would like to do some feature combination
+pairs(df)
+
+feat_com <- c("pay_price","avg_online_minutes","ivory","sr_training_speed_level","stone","wood",
+              "gen_acc","magic","bd_healing_spring_level","bd_warehouse_level","meat",
+              "bd_guest_cavern_level","rsh_acc","train_acc","bd_market_level","shaman",
+              "bld_acc","sr_outpost_durability_level","bd_hero_strengthen_level",
+              "treat_acc","pvp_battle_count","prediction_pay_price")
+
+df_com <- df[,feat_com]
+correlations = cor(df_sel)
+library(corrplot)
+corrplot(correlations,method="circle",type="lower",sig.level = 0.01,insig = "blank")
+
+#linear reg
+library(caret)
+
+fit_linear <- train(prediction_pay_price ~ ., data = df_com, method = "lm", 
+                    preProc = c("center", "scale"))
+
+
+# ctrl <- trainControl(method = "repeatedcv", repeats = 3)
+# fit_cv <- train(
+#   prediction_pay_price ~ .,
+#   data = df_com,
+#   method = "lm",
+#   preProc = c("center", "scale"),
+#   trControl = ctrl
+# )
+
+#xgoost
+library(xgboost)
+sparse_matrix_sel <- sparse.model.matrix(prediction_pay_price~.-1,data=df_sel)
+output_vector = df_sel$prediction_pay_price
+dtrain_sel <- xgb.DMatrix(data = sparse_matrix_sel, label = output_vector)
+
+sparse_matrix_com <- sparse.model.matrix(prediction_pay_price~.-1,data=df_com)
+dtrain_com <- xgb.DMatrix(data = sparse_matrix_com, label = output_vector)
+
+
+#ctrl <- trainControl(method = "repeatedcv", number = 3, repeats = 2, search = "random")
+#model <- train(prediction_pay_price~., data = df_sel,preProc = c("center", "scale"), method = "xgbTree",  trControl = ctrl)
+
+fit_xgbLinear <- train(prediction_pay_price~., data = df_sel, method = "xgbLinear", preProc = c("center", "scale"))
+
 
 
