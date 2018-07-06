@@ -5,7 +5,7 @@ library(Matrix)
 library(data.table)
 setwd("D:/Projects/BrutalAge/data/")
 train <- read_csv("tap_fun_train.csv")
-#test <- read_csv("tap_fun_test.csv")
+test <- read_csv("tap_fun_test.csv")
 
 
 
@@ -50,6 +50,7 @@ bst_lgt <- xgboost(data = dtrain, max.depth = 4, eta = 1, nthread = 2, max_delta
 importance <- xgb.importance(feature_names = colnames(sparse_matrix), model = bst_lgt)
 importance[1:10,]
 # 5.2. Prediction (for those paid users, how much will they pay?)
+df <- data.frame(train[,-c(1,2)])
 library(caret)
 fit_linear <- train(prediction_pay_price ~ ., data = df, 
                     method = "lm", 
@@ -164,5 +165,33 @@ m.best <- dim(df_clust$z)[2]
 
 cor(train$pay_price,train$prediction_pay_price)
 df <- train[,c(1,107)]
+#**********************RMSE**********************#
+df <- data.frame(train[,-c(1,2)])
+df_scal <- data.frame(cbind(df[,c(1:106)],df$prediction_pay_price))
+colnames(df_scal)[107] <- c("prediction_pay_price")
+fit_linear <- lm(prediction_pay_price~., data = df_scal)
+library(Metrics)
+rmse(actual = df_scal$prediction_pay_price,predicted = fit_linear$fitted.values)
 
+require(caret)
+require(xgboost)
+require(data.table)
+#fitControl <- trainControl(method = "repeatedcv", number = 10, repeats = 2, search = "random")
+#model <- train(prediction_pay_price~., data = df, method = "xgbTree", trControl = fitControl)
 
+sparse_matrix <- sparse.model.matrix(prediction_pay_price ~ ., data = df_scal)[,-1]
+output_vector = df_scal$prediction_pay_price
+dtrain <- xgb.DMatrix(data = sparse_matrix, label = output_vector)
+
+# bst_linear <- xgboost(data = dtrain, max.depth = 10, eta = 1, nthread = 5, max_delta_step=5,
+#                    nround = 10, objective = "reg:linear", verbose = 2,eval_metric="rmse")
+
+param <- list(objective = "reg:linear", booster = "gblinear",
+              nthread = 2, alpha = 0.0001, lambda = 1)
+watchlist <- list(eval = dtrain, train = dtrain)
+num_round <- 2
+bst <- xgb.train(param, dtrain, num_round,watchlist)
+pred <- predict(bst,dtest)
+#64.670815
+submit <- data.frame(cbind(test[,1],round(pred,2)))
+write.csv(submit,file="submit.csv")
