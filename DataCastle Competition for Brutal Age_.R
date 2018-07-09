@@ -6,7 +6,7 @@ library(data.table)
 setwd("D:/Projects/BrutalAge/data/")
 train <- read_csv("tap_fun_train.csv")
 test <- read_csv("tap_fun_test.csv")
-
+train$cat <- as.factor(ifelse(train$pay_price==train$prediction_pay_price,'same','diff'))
 
 
 #▊2. split train set using stratified sampling 
@@ -178,13 +178,14 @@ require(xgboost)
 require(data.table)
 #fitControl <- trainControl(method = "repeatedcv", number = 10, repeats = 2, search = "random")
 #model <- train(prediction_pay_price~., data = df, method = "xgbTree", trControl = fitControl)
-
-sparse_matrix <- sparse.model.matrix(prediction_pay_price ~ ., data = df_scal)[,-1]
-output_vector = df_scal$prediction_pay_price
+df$labels <- df$prediction_pay_price
+df <- df[,c(2:22)]
+sparse_matrix <- sparse.model.matrix(labels ~ ., data = df)[,-1]labels()
+output_vector = df$labels
 dtrain <- xgb.DMatrix(data = sparse_matrix, label = output_vector)
 
-# bst_linear <- xgboost(data = dtrain, max.depth = 10, eta = 1, nthread = 5, max_delta_step=5,
-#                    nround = 10, objective = "reg:linear", verbose = 2,eval_metric="rmse")
+bst_linear <- xgboost(data = dtrain, max.depth = 10, eta = 1, nthread = 5, max_delta_step=5,
+                   nround = 10, objective = "reg:linear", verbose = 2,eval_metric="rmse")
 
 param <- list(objective = "reg:linear", booster = "gblinear",
               nthread = 2, alpha = 0.0001, lambda = 1)
@@ -195,3 +196,44 @@ pred <- predict(bst,dtest)
 #64.670815
 submit <- data.frame(cbind(test[,1],round(pred,2)))
 write.csv(submit,file="submit.csv")
+
+#**********************20180709**********************#
+df<- train[,-c(1,2)]
+df$cls <- ifelse(df$pay_price==df$prediction_pay_price,"same","diff")
+df <- df[,-107]
+df <- data.frame(df)
+for(i in c(33:97)){
+  df[,i] <- factor(df[,i],order=TRUE)
+}
+
+library(ROSE)
+df_bal <- ovun.sample(cls ~ ., data = df, method = "both", p=0.5, N=2288007, seed = 1)$data
+
+feat <- c("avg_online_minutes","ivory_add_value","pay_price","stone_add_value","magic_add_value",
+"reaserch_acceleration_add_value","meat_add_value","general_acceleration_add_value",
+"wood_reduce_value","pve_battle_count","cls")
+# training_acceleration_add_value
+# bd_warehouse_level1
+# building_acceleration_add_value
+# general_acceleration_reduce_value
+# magic_reduce_value
+
+df_bal_sel <- df_bal[,feat]
+
+library(xgboost)
+sparse_matrix <- sparse.model.matrix(cls ~ ., data = df_bal_sel)[,-1]
+output_vector = df_bal[,"cls"] == "same"
+dtrain <- xgb.DMatrix(data = sparse_matrix, label = output_vector)
+bst_lgt <- xgboost(data = dtrain, max.depth = 10, eta = 1, nthread = 2, max_delta_step=10,
+                   nround = 5, objective = "binary:logistic", verbose = 2,eval_metric="auc")
+importance <- xgb.importance(feature_names = colnames(sparse_matrix), model = bst_lgt)
+importance[1:10,]
+param <- list(max_depth=10, eta=1, silent=1, nthread=2, objective='binary:logistic')
+xgb.cv(param, dtrain, nround=5, nfold=3, metrics={'auc'})
+
+
+#Pre-Processing using caret
+train <- train[train$pay_price!=train$prediction_pay_price,-c(1,2)]
+
+
+
