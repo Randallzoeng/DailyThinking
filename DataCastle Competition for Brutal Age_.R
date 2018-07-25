@@ -207,7 +207,7 @@ for(i in c(33:97)){
 }
 
 library(ROSE)
-df_bal <- ovun.sample(cls ~ ., data = df, method = "both", p=0.5, N=2288007, seed = 1)$data
+df <- ovun.sample(cls ~ ., data = df, method = "both", p=0.5, N=2288007, seed = 1)$data
 
 feat <- c("avg_online_minutes","ivory_add_value","pay_price","stone_add_value","magic_add_value",
 "reaserch_acceleration_add_value","meat_add_value","general_acceleration_add_value",
@@ -221,13 +221,16 @@ feat <- c("avg_online_minutes","ivory_add_value","pay_price","stone_add_value","
 df_bal_sel <- df_bal[,feat]
 
 library(xgboost)
-sparse_matrix <- sparse.model.matrix(cls ~ ., data = df_bal_sel)[,-1]
-output_vector = df_bal[,"cls"] == "same"
+sparse_matrix <- sparse.model.matrix(cls ~ ., data = df)[,-1]
+output_vector = df[,"cls"] == "same"
 dtrain <- xgb.DMatrix(data = sparse_matrix, label = output_vector)
+
 bst_lgt <- xgboost(data = dtrain, max.depth = 10, eta = 1, nthread = 2, max_delta_step=10,
                    nround = 5, objective = "binary:logistic", verbose = 2,eval_metric="auc")
+
 importance <- xgb.importance(feature_names = colnames(sparse_matrix), model = bst_lgt)
 importance[1:10,]
+
 param <- list(max_depth=10, eta=1, silent=1, nthread=2, objective='binary:logistic')
 xgb.cv(param, dtrain, nround=5, nfold=3, metrics={'auc'})
 
@@ -236,4 +239,84 @@ xgb.cv(param, dtrain, nround=5, nfold=3, metrics={'auc'})
 train <- train[train$pay_price!=train$prediction_pay_price,-c(1,2)]
 
 
+
+#**********************20180717**********************#
+train <- train[,-(1:2)]
+library(e1071)
+skew_info <- apply(train, 2, skewness)
+sort(skew_info,decreasing = T)
+
+library(caret)
+trans <- preProcess(train,method=c("BoxCox","center","scale"))
+train_trans <- predict(trans,train)
+
+# library(car)
+# outlierTest(lm(prediction_pay_price~.,data=train_trans))
+
+# train_trans_2 <- spatialSign(train_trans)
+nearZeroVar(train_trans)
+# highCorr <- findCorrelation(cor(train_tran[,-1]),cutoff = .75)
+
+
+
+
+# "avg_online_minutes","ivory_add_value","pay_price","stone_add_value","meat_add_value",
+# "magic_add_value","reaserch_acceleration_add_value","training_acceleration_add_value","general_acceleration_add_value","wood_reduce_value",
+# "wood_add_value","building_acceleration_reduce_value","meat_reduce_value","wound_infantry_add_value","building_acceleration_add_value",
+# "infantry_reduce_value","pvp_battle_count","bd_outpost_portal_level","treatment_acceleraion_add_value","general_acceleration_reduce_value",
+
+
+
+#**********************20180724**********************#
+df_linear <- train[train$pay_price!=train$prediction_pay_price,-c(1,2)]
+dim(df_linear)
+#YeoJohnson transformation
+library(caret)
+df_linear <- data.frame(df_linear)
+trans_yeo <- preProcess(df_linear[,-107],method="YeoJohnson")
+trn_yeo <- predict(trans_yeo,newdata = df_linear[,-107])
+
+#spatial sign
+trans_scaling <- preProcess(df_linear[,-107],method = c("center","scale"))
+trn_scaling <- predict(trans_scaling,newdata = df_linear[,-107])
+trn_spatial <- spatialSign(trn_scaling)
+
+library(xgboost)
+trn <- as.matrix(df_linear)
+trn_yeo <- as.matrix(cbind(trn_yeo,trn[,107]))
+colnames(trn_yeo)[107] <- c("prediction_pay_price")
+trn_spatial <- as.matrix(cbind(trn_spatial,trn[,107]))
+colnames(trn_spatial)[107] <- c("prediction_pay_price")
+
+fitControl <- trainControl(method = "repeatedcv", number = 10, repeats = 2, search = "random")
+fitControl <- trainControl(method = "cv", number = 5,  search = "random")
+fit_xgb <- train(prediction_pay_price~., data = df_linear, method = "xgbLinear", trControl = fitControl)
+#str(fit_xgb)
+fit_xgb$results
+fit_xgb <- train(prediction_pay_price~., data = trn_yeo, method = "xgbLinear", trControl = fitControl)
+fit_xgb <- train(prediction_pay_price~., data = trn_spatial, method = "xgbLinear", trControl = fitControl)
+
+#**********************20180724**********************#
+df_linear <- data.frame(df_linear)
+library(earth)
+#set.seed(825)
+fit_MARS <- train(prediction_pay_price~.,data = df_linear, method = "earth", 
+                  tuneLength = 15,trControl = trainControl(method='cv'))
+fit_MARS
+plot(fit_MARS)
+
+df_linear <- train[,c(-1,-2)]
+nzv_info <- nearZeroVar(df_linear,saveMetrics = T)
+head(nzv_info)
+row.names(nzv_info[nzv_info$nzv,])
+
+df_linear <- data.frame(train[,c("avg_online_minutes","pay_count","pay_price","prediction_pay_price")])
+pred <- predict(fit_xgb,newdata=df_linear)
+library(ggplot2)
+ggplot(data=df_linear,aes(x=df_linear$prediction_pay_price,y=pred))+geom_point(alpha=.1) + geom_abline(col="blue")
+
+test <- test[,c("avg_online_minutes","pay_count","pay_price")]
+pred <- predict(fit_MARS,newdata = test)
+pred <- cbind(test$user_id,pred)
+write.csv(pred,file="pred.csv",row.names = F)
 
