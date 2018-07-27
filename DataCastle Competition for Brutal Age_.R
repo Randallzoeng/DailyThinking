@@ -100,12 +100,12 @@ df$shaman <- train$shaman_add_value + train$shaman_reduce_value + train$wound_sh
 #acc
 df$gen_acc <- train$general_acceleration_add_value + train$general_acceleration_reduce_value
 df$bld_acc <- train$building_acceleration_add_value + train$building_acceleration_reduce_value
-df$rsh_acc <- train$reaserch_acceleration_add_value + train$reaserch_acceleration_reduce_value
+#df$rsh_acc <- train$reaserch_acceleration_add_value + train$reaserch_acceleration_reduce_value
 df$train_acc <- train$training_acceleration_add_value + train$training_acceleration_reduce_value
 df$treat_acc <- train$treatment_acceleraion_add_value + train$treatment_acceleration_reduce_value
 #level
-df$bdlevel <- apply(train[,35:50],1,sum)
-df$sclevel <- apply(train[,51:99],1,sum)
+# df$bdlevel <- apply(train[,35:50],1,sum)
+# df$sclevel <- apply(train[,51:99],1,sum)
 #atk
 df$pvp <- train$pvp_battle_count
 df$pve <- train$pve_battle_count
@@ -320,3 +320,35 @@ pred <- predict(fit_MARS,newdata = test)
 pred <- cbind(test$user_id,pred)
 write.csv(pred,file="pred.csv",row.names = F)
 
+trn <- data.frame(train[,-c(1,2)])
+trn <- cbind(scale(trn[,1:106]),trn$prediction_pay_price)
+colnames(trn)[107] <- c("prediction_pay_price")
+trn <- data.frame(trn)
+#glmStepAIC
+trn <- trn[,-c(33:97)]
+library(caret)
+fit_glmStep <- train(prediction_pay_price~.,data = df, method = "glmStepAIC",
+                     preProc = c("center", "scale"))
+
+
+
+#**********************20180727**********************#
+df<- train[,c(109,106:108)]
+df <- data.frame(df)
+
+library(caret)
+set.seed(13)
+
+fit_lm <- train(prediction_pay_price~.,data = df, method = "lm",
+                     preProc = c("center", "scale"),trControl = trainControl(method = "cv"))
+
+fit_pls <- train(prediction_pay_price ~ .,data = df,method = "pls",
+                 preProc = c("center", "scale"),tuneLength = 10,
+                 trControl = trainControl(method = "cv"))
+
+fit_MARS <- train(prediction_pay_price~.,data = df, method = "earth", 
+                  preProc = c("center", "scale"),
+                  tuneLength = 15,trControl = trainControl(method='cv'))
+
+fitControl <- trainControl(method = "cv", search = "random")
+fit_xgb <- train(prediction_pay_price~., data = df, method = "xgbLinear", trControl = fitControl)
