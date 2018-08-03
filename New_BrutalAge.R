@@ -89,12 +89,9 @@ RMSE(pred = fit_rlm$fitted.values,obs = trn$prediction_pay_price)
 library(pls)
 fit_pls <- plsr(prediction_pay_price~.,data=trn)
 RMSE(pred = fit_pls$fitted.values,obs = trn$prediction_pay_price)
-
-ctrl=trainControl(method = "cv",number=10)
-fit_pls <- train(prediction_pay_price~.,data=trn,
-                 tuneLength=15,trControl=ctrl)
-plot(varImp(fit_pls),top=15)
-#pay_price,avg_online_minutes,treatment_acceleraion_add_value,pay_count,pve_win_count
+#"pay_price","avg_online_minutes","treatment_acceleraion_add_value","pay_count","pve_win_count"
+trn_flt <- trn[,c("pay_price","avg_online_minutes","treatment_acceleraion_add_value",
+                  "pay_count","pve_win_count","prediction_pay_price")]
 
 #RMSE 62.62439 (negative in pred)
 
@@ -114,7 +111,7 @@ RMSE(pred = pred_lasso$fit,obs = trn$prediction_pay_price)
 
 #7.6 randomForest
 library(randomForest)
-fit_rf<- randomForest(prediction_pay_price~.,data= trn)
+fit_rf<- randomForest(prediction_pay_price~.,data= trn_flt)
 #cannot allocate vector of size 6.8 Gb
 
 #7.7 xgboost
