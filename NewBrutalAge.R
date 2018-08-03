@@ -115,13 +115,10 @@ fit_rf<- randomForest(prediction_pay_price~.,data= trn)
 library(xgboost)
 dtrain <- xgb.DMatrix(data = as.matrix(trn[,-20]), label = trn[,20])
 bst_linear <- xgboost(data = dtrain, max.depth = 10, eta = 1, nthread = 2, max_delta_step=10,
-                   nround = 5, objective = "reg:linear", verbose = 2,eval_metric="rmse")
+                   nround = 10, objective = "reg:linear", verbose = 2,eval_metric="rmse")
 #RMSE 85.272507
 
-#7.8 MARS
-library(earth)
-fit_MARS <- train(prediction_pay_price~.,data = trn, method = "earth", 
-                  tuneLength = 15,trControl = trainControl(method='cv'))
+
 
 
 
