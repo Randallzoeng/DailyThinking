@@ -26,6 +26,8 @@
 > 全面信息和多种观点的对抗和互补是群体决策的优势
 > the average of a large number of forecasts reliably outperforms the average individual forecast. but the value of the crowd critically depends on the independence of their opinions. 
 
+8. Sampling Distribution
+> http://onlinestatbook.com/stat_sim/sampling_dist/index.html
 
 - Some bolgs
   - https://oku.edu.mie-u.ac.jp/~okumura/stat/
