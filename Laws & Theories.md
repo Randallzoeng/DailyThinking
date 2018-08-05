@@ -29,5 +29,9 @@
 8. Sampling Distribution
 > http://onlinestatbook.com/stat_sim/sampling_dist/index.html
 
+9. Godel's Incompleteness Theorem
+> https://en.wikipedia.org/wiki/G%C3%B6del%27s_incompleteness_theorems
+
+
 - Some bolgs
   - https://oku.edu.mie-u.ac.jp/~okumura/stat/
