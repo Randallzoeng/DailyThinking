@@ -31,6 +31,7 @@
 
 9. Godel's Incompleteness Theorem
 > https://en.wikipedia.org/wiki/G%C3%B6del%27s_incompleteness_theorems
+> http://wiki.mbalib.com/wiki/Godel%27s_incompleteness_theorem
 
 
 - Some bolgs
