@@ -31,10 +31,9 @@
 
 9. Godel's Incompleteness Theorem
 > https://en.wikipedia.org/wiki/G%C3%B6del%27s_incompleteness_theorems
-> http://wiki.mbalib.com/wiki/Godel%27s_incompleteness_theorem
-> From CBS the good fight S02E04
- 
-> an algorithm is undependable if it can't be proven.
+> 
+> "an algorithm is undependable if it can't be proven." -AGF S02E04
+here is some [discuss](https://www.reddit.com/r/thegoodwife/comments/86zacx/the_good_fight_episode_discussions02e04_day_429/) about it.
 
 - Some bolgs
   - https://oku.edu.mie-u.ac.jp/~okumura/stat/
