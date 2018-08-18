@@ -37,3 +37,4 @@ here is some [discuss](https://www.reddit.com/r/thegoodwife/comments/86zacx/the_
 
 - Some bolgs
   - https://oku.edu.mie-u.ac.jp/~okumura/stat/
+  - https://chrisalbon.com/
