@@ -4,21 +4,22 @@ library(data.table)
 setwd("D:/Projects/BrutalAge/data/")
 train <- read_csv("tap_fun_train.csv")
 
-# df<- train[,c(109,106:108)]
-df<- train[,c(109,107)]
-# df$wood <- train$wood_add_value + train$wood_reduce_value
-# df$stone <- train$stone_add_value + train$stone_reduce_value
-# df$ivory <- train$ivory_add_value + train$ivory_reduce_value
-# df$meat <- train$meat_add_value + train$meat_reduce_value
+df<- train[,c(109,106:108)]
+# df<- train[,c(109,107)]
+
+df$wood <- train$wood_add_value + train$wood_reduce_value
+df$stone <- train$stone_add_value + train$stone_reduce_value
+df$ivory <- train$ivory_add_value + train$ivory_reduce_value
+df$meat <- train$meat_add_value + train$meat_reduce_value
 df$magic <- train$magic_add_value + train$magic_reduce_value
 df$infantry <- train$infantry_add_value + train$infantry_reduce_value + train$wound_infantry_add_value + train$wound_infantry_reduce_value
-# df$cavalry <- train$cavalry_add_value + train$cavalry_reduce_value + train$wound_cavalry_add_value + train$wound_cavalry_reduce_value
+df$cavalry <- train$cavalry_add_value + train$cavalry_reduce_value + train$wound_cavalry_add_value + train$wound_cavalry_reduce_value
 df$shaman <- train$shaman_add_value + train$shaman_reduce_value + train$wound_shaman_add_value + train$wound_shaman_reduce_value
 #acc
-# df$gen_acc <- train$general_acceleration_add_value + train$general_acceleration_reduce_value
-# df$bld_acc <- train$building_acceleration_add_value + train$building_acceleration_reduce_value
-# df$rsh_acc <- train$reaserch_acceleration_add_value + train$reaserch_acceleration_reduce_value
-# df$train_acc <- train$training_acceleration_add_value + train$training_acceleration_reduce_value
+df$gen_acc <- train$general_acceleration_add_value + train$general_acceleration_reduce_value
+df$bld_acc <- train$building_acceleration_add_value + train$building_acceleration_reduce_value
+df$rsh_acc <- train$reaserch_acceleration_add_value + train$reaserch_acceleration_reduce_value
+df$train_acc <- train$training_acceleration_add_value + train$training_acceleration_reduce_value
 df$treat_acc <- train$treatment_acceleraion_add_value + train$treatment_acceleration_reduce_value
 #level
 # df$bdlevel <- apply(train[,35:50],1,sum)
@@ -29,10 +30,11 @@ df$pve <- train$pve_battle_count
 
 df$cls <- as.factor(ifelse(train$prediction_pay_price==0,"free","paid"))
 
+
 library(caret)
-df <- data.frame(df)
+df_paid <- data.frame(df[df$cls=="paid",1:19])
 set.seed(823)
-trn_id <- createDataPartition(df$prediction_pay_price,p=0.8,list=F)
+trn_id <- createDataPartition(df_paid$prediction_pay_price,p=0.8,list=F)
 
 trn <- df[trn_id,] 
 vld <- df[-trn_id,]
@@ -91,7 +93,7 @@ RMSE(pred = pred_lm,obs = vldY)
 #▉PLS
 library(pls)
 set.seed(823)
-ctrl <- trainControl(method = "cv",number=3)
+ctrl <- trainControl(method = "cv",number=5)
 fit_pls <- train(trnX,trnY,method="pls",tuneLength=10,trControl = ctrl)
 min(fit_pls$results$RMSE)
 # [1] 60.37774
@@ -112,8 +114,19 @@ RMSE(pred = pred_mars,obs = vldY)
 # [1] 60.30475
 
 #▉SVM
-# library(kernlab)
-# fit_svm <- train(trnX,trnY,method="svmRadial",tuneLength=10,trControl=ctrl)
+
+#▉KNN
+df <- as.data.frame(df)
+library(caret)
+set.seed(823)
+trn_id <- createDataPartition(df$prediction_pay_price,p=0.8,list=F)
+trn <- df[trn_id,]
+vld <- df[-trn_id,]
+set.seed(823)
+fit_knn <- train(prediction_pay_price~.,data=trn,method="knn",
+                 preProc=c("center","scale"),
+                 tuneGrid=data.frame(.k=1:20),
+                 trControl=trainControl(method="cv",number = 5))
 
 #▉RF
 library(h2o)
@@ -137,6 +150,17 @@ fit_gbm <- h2o.gbm(x = x,y = y,training_frame = trn,model_id = "fit_gbm",seed = 
 # RMSE:  49.41872
 h2o.performance(model = fit_gbm,newdata = vld)
 # RMSE:  57.03195
+
+#hyper tuning
+gbm_fit <- h2o.gbm(x = x,y = y,training_frame = trn,validation_frame = vld,model_id = "gbm_fit",ntrees = 500,
+                   score_tree_interval = 5,stopping_rounds = 3,stopping_metric = "RMSE",learn_rate = 0.05,seed = 823)
+
+#predict
+pred_gbm <- h2o.predict(fit_gbm,newdata = df)
+pred_gbm <- as.data.frame(pred_gbm)
+submit_sample <- cbind(train$user_id,pred_gbm)
+write.csv(submit,file="submit_sample")
+
 h2o.shutdown()
 
 #▉xgboost
@@ -154,14 +178,30 @@ set.seed(823)
 ctrl <- trainControl(method = "cv", number = 3)
 fit_xgbLinear <-train(prediction_pay_price ~.,data=df,method="xgbTree",
                       metric = "RMSE",trControl=ctrl,tuneLength=20)
+#▉cubist
+library(Cubist)
+df <- as.data.frame(df[df$prediction_pay_price!=0,])
+set.seed(824)
+library(caret)
+ctrl <- trainControl(method = "cv",number=5)
+fit_cubist <- train(df[,2:19],df$prediction_pay_price,method="cubist",tuneLength=10)
 
+#-------------Classification before Regression-----------------
+df_cls <- df[,2:20]
+df_reg <- df[df$cls=="paid",1:19]
+y_cls <- "cls"
+x_cls <- setdiff(names(df_cls), y_cls)  
 
-#-------------Basic Training using XGBoost in caret Library-----------------
-# Set up control parameters for caret::train
-# Here we use 10-fold cross-validation, repeating twice, and using random search for tuning hyper-parameters.
-fitControl <- trainControl(method = "repeatedcv", number = 10, repeats = 2, search = "random")
-# train a xgbTree model using caret::train
-model <- train(factor(Improved)~., data = df, method = "xgbTree", trControl = fitControl)
+y_reg <- "prediction_pay_price"
+x_reg <- setdiff(names(df_reg), y_reg)
 
-# Instead of tree for our boosters, you can also fit a linear regression or logistic regression model using xgbLinear
-# model <- train(factor(Improved)~., data = df, method = "xgbLinear", trControl = fitControl)
+cls_glm <- h2o.glm(x=x_cls,y=y_cls,training_frame = df_cls,family = "binomial",
+                   lambda_search = T,nfolds = 5,seed=823)
+h2o.auc(cls_glm, xval = TRUE)  
+# [1] 0.9899017
+reg_gbm <- h2o.gbm(x = x_reg,y = y_reg,training_frame = df_reg,model_id = "gbm_fit",
+                   ntrees = 500,score_tree_interval = 5,stopping_rounds = 3,
+                   stopping_metric = "RMSE",nfolds = 5,seed = 823)
+
+h2o.rmse(reg_gbm, xval = TRUE)
+# [1] 441.874
