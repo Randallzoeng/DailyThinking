@@ -35,6 +35,8 @@
 > "an algorithm is undependable if it can't be proven." -AGF S02E04
 here is some [discuss](https://www.reddit.com/r/thegoodwife/comments/86zacx/the_good_fight_episode_discussions02e04_day_429/) about it.
 
+---
 - Some bolgs
   - https://oku.edu.mie-u.ac.jp/~okumura/stat/
   - https://chrisalbon.com/
+  - [EVALUATION AND SELECTION OF VARIABLES FOR MACHINE LEARNING MODELS](https://www.mql5.com/en/articles/2029?)
