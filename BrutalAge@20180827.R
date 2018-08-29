@@ -2,10 +2,11 @@ library(tidyverse)
 library(Matrix)
 library(data.table)
 setwd("D:/Projects/BrutalAge/data/")
-test <- read_csv("tap_fun_test.csv")
+test <- read_csv("tap_fun_train.csv")
 
 df<- as.data.frame(train[train$prediction_pay_price!=0,-c(1:2)])
 df$cls <- as.factor(ifelse(df$prediction_pay_price==0,"free","paid"))
+df$cat <- as.factor(ifelse(df$prediction_pay_price==df$pay_price,"same","diff"))
 
 #-------------feature engineering-----------------
 df<- train[,c(109,106:108)]
@@ -39,7 +40,7 @@ vld <- df[-trn_id,]
 
 # #removing high-correlation predictors
 # "prediction_pay_price","pay_price","magic","infantry","shaman","pvp","pve","treat_acc"
-# 'pay_price','pay_count','meat_add_value','ivory_add_value','stone_reduce_value','stone_add_value'
+
 cor_info <- findCorrelation(cor(trn),cutoff = 0.7)
 colnames(trn)[cor_info]
 col_sel <- setdiff(names(trn),names(df_top20)[cor_info])
@@ -128,10 +129,12 @@ fit_knn <- train(prediction_pay_price~.,data=trn,method="knn",
 #▉RF
 library(h2o)
 h2o.init(port = 54322)
-data_path <- c("D:/Projects/BrutalAge/data/tap_fun_test.csv")
+data_path <- c("D:/Projects/BrutalAge/data/tap_fun_train.csv")
 train <- h2o.importFile(data_path,header = T)
-train <- train[2:2288008,var_col]
-test <- train[,var_col]
+col_imp <- c('pay_price','pay_count','meat_add_value','training_acceleration_add_value','stone_add_value','reaserch_acceleration_add_value',
+             'sr_infantry_hp_level','bd_healing_lodge_level','sr_gathering_hunter_buff_level','wood_add_value',"prediction_pay_price")
+
+train <- train[2:2288008,col_imp]
 
 trn <- df[trn_id,]
 vld <- df[-trn_id,]
@@ -146,15 +149,14 @@ h2o.performance(model = fit_rf,newdata = vld)
 # RMSE:  61.11859
 
 #▉GBM
-fit_gbm <- h2o.gbm(x = x,y = y,training_frame = train,model_id = "fit_gbm",seed = 827)
+fit_gbm <- h2o.gbm(x = x,y = y,training_frame = trn,model_id = "fit_gbm",seed = 829)
 # RMSE:  49.41872
 h2o.performance(model = fit_gbm,newdata = vld)
 # RMSE:  57.03195
-var_col <- c('pay_price','pay_count','meat_add_value','ivory_add_value',
-             'stone_reduce_value','stone_add_value')
+trn <- train[,c(col_imp,"prediction_pay_price")]
 #hyper tuning
-gbm_fit <- h2o.gbm(x = x,y = y,training_frame = train,model_id = "gbm_fit",ntrees = 100,nfolds = 10,
-                   score_tree_interval = 5,stopping_rounds = 3,stopping_metric = "RMSE",learn_rate = 0.05,seed = 827)
+gbm_fit <- h2o.gbm(x = x,y = y,training_frame = train,model_id = "gbm_fit",ntrees = 500,nfolds = 5,
+                   score_tree_interval = 5,stopping_rounds = 3,stopping_metric = "RMSE",seed = 829)
 
 #predict
 pred_gbm <- h2o.predict(fit_gbm,newdata = test)
