@@ -40,3 +40,4 @@ here is some [discuss](https://www.reddit.com/r/thegoodwife/comments/86zacx/the_
   - https://oku.edu.mie-u.ac.jp/~okumura/stat/
   - https://chrisalbon.com/
   - [EVALUATION AND SELECTION OF VARIABLES FOR MACHINE LEARNING MODELS](https://www.mql5.com/en/articles/2029?)
+  - [The Economist chn](http://www.tegbr.com/)
