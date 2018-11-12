@@ -19,3 +19,6 @@
 `Coursera People Analytics`
 
 There is no guarantee because you have data you make better decisions, but it is an opportunity to improve decision-making.
+数据不能保证你做出更好的决策，但是它能为决策制定的优化提供契机。
+
+- http://blog.conceptnet.io/posts/2017/how-to-make-a-racist-ai-without-really-trying/
