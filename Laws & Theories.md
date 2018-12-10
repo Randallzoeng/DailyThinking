@@ -41,7 +41,4 @@ here is some [discuss](https://www.reddit.com/r/thegoodwife/comments/86zacx/the_
   - https://chrisalbon.com/
   - [EVALUATION AND SELECTION OF VARIABLES FOR MACHINE LEARNING MODELS](https://www.mql5.com/en/articles/2029?)
   - [The Economist chn](http://www.tegbr.com/)
-  
-  > 他们彼此深信 是瞬间迸发的热情让他们相遇。这样的确定是美丽的,但变幻无常更为美丽.
-  
   - https://www.youtube.com/watch?time_continue=202&v=QySt8rt2mPw
