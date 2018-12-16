@@ -35,7 +35,7 @@
 > "an algorithm is undependable if it can't be proven." -AGF S02E04
 here is some [discuss](https://www.reddit.com/r/thegoodwife/comments/86zacx/the_good_fight_episode_discussions02e04_day_429/) about it.
 
-10.You can’t connect the dots looking forward, you can only connect them looking backwards. Steve Jobs
+10. You can’t connect the dots looking forward, you can only connect them looking backwards. Steve Jobs
 
 ---
 - Some bolgs
