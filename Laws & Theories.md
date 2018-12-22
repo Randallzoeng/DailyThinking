@@ -44,3 +44,4 @@ here is some [discuss](https://www.reddit.com/r/thegoodwife/comments/86zacx/the_
   - [EVALUATION AND SELECTION OF VARIABLES FOR MACHINE LEARNING MODELS](https://www.mql5.com/en/articles/2029?)
   - [The Economist chn](http://www.tegbr.com/)
   - https://www.youtube.com/watch?time_continue=202&v=QySt8rt2mPw
+  - [Interviewing is a noisy prediction problem](https://erikbern.com/2018/05/02/interviewing-is-a-noisy-prediction-problem.html)
