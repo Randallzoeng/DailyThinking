@@ -37,6 +37,7 @@ here is some [discuss](https://www.reddit.com/r/thegoodwife/comments/86zacx/the_
 
 10. You can’t connect the dots looking forward, you can only connect them looking backwards. Steve Jobs
 
+11. it's not panacea, there is no guarantee because you have data you make better decision, but it is an opportunity to improve decision-making.
 ---
 - Some bolgs
   - https://oku.edu.mie-u.ac.jp/~okumura/stat/
