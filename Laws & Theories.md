@@ -45,3 +45,4 @@ here is some [discuss](https://www.reddit.com/r/thegoodwife/comments/86zacx/the_
   - [The Economist chn](http://www.tegbr.com/)
   - https://www.youtube.com/watch?time_continue=202&v=QySt8rt2mPw
   - [Interviewing is a noisy prediction problem](https://erikbern.com/2018/05/02/interviewing-is-a-noisy-prediction-problem.html)
+  - https://smott.gitbooks.io/introduction-to-microsoft-r-server/content/
