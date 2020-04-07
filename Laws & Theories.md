@@ -40,6 +40,14 @@ here is some [discuss](https://www.reddit.com/r/thegoodwife/comments/86zacx/the_
 11. it's not panacea, there is no guarantee because you have data you make better decision, but it is an opportunity to improve decision-making.
 
 12. My dear Watson, he says, how dangerous it is to reason from insufficient data. Sherlock Holmes
+
+13. [After Covid, AI will Pivot](https://towardsdatascience.com/after-covid-ai-will-pivot-dbe9dd06327)
+It’s not easy to turn ideas into business success when you have no idea what the world is going to look like in six months.
+
+Fortunately, there are other technologies out there that can make sense of the current world. Want to know what they are? Once again, just go check your news-feed and look at what the epidemiologists are using. The list of tools is telling: network models, agent-based models, decision analysis, causal inference. What do they all have in common? **They’re designed to extend human intuition rather than to replace it. They don’t automate simple tasks. Instead, they enable human specialists to achieve things that would otherwise be impossible. They boost the range of a company’s behaviors rather than accelerating one that already exists.**
+A movement organized around this approach has been building slowly and quietly in the background over the last few years, driven by thought-leaders concerned about the world’s trajectory. That movement is called Decision Intelligence (DI). It makes extensive use of powerful analytical techniques that haven’t received much love during the era of deep learning, but which are now hurtling back into the limelight: **scenario planning, graphical modeling, decision theory**. The strength of many of these tools is that they’re capable of representing uncertainty explicitly in a way that machine learning, thus far, cannot.
+Go look at any news site or social media feed for references to disease modeling efforts for this pandemic and something should jump out at you. **Not one of the thought-leaders building models to anticipate bed demand, ventilator production, or economic effects are using machine learning. That’s because those kinds of techniques are hopeless at the kind of anticipation that now counts most.**
+
 ---
 - Some bolgs
   - https://oku.edu.mie-u.ac.jp/~okumura/stat/
